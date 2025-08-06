@@ -4,11 +4,13 @@
 Sistema de microservicios para gestión agrícola que incluye:
 - **Microservicio Central**: Gestión de agricultores y cosechas
 - **Microservicio Facturación**: Generación y gestión de facturas
+- **Microservicio Inventario**: Gestión de insumos agrícolas y control de stock
 
 ## Tecnologías
 - Spring Boot 3.2.0
 - Java 17
 - PostgreSQL 14
+- MySQL 8.0
 - RabbitMQ 3.12
 - Docker & Docker Compose
 
@@ -52,6 +54,14 @@ mvn spring-boot:run
 ```
 El servicio estará disponible en: http://localhost:8082
 
+#### Microservicio Inventario
+```bash
+cd ms-inventario
+mvn clean install
+mvn spring-boot:run
+```
+El servicio estará disponible en: http://localhost:8081
+
 ### 5. Verificar funcionamiento
 
 #### Acceso a RabbitMQ Management
@@ -82,12 +92,22 @@ El servicio estará disponible en: http://localhost:8082
 - `PUT /api/facturas/{id}/pagar` - Marcar factura como pagada
 - `POST /api/facturas/manual` - Crear factura manual (para pruebas)
 
+### Microservicio Inventario (Puerto 8081)
+- `GET /api/insumos` - Listar insumos
+- `GET /api/insumos/{id}` - Obtener insumo por ID
+- `POST /api/insumos` - Crear insumo
+- `PUT /api/insumos/{id}` - Actualizar insumo
+- `DELETE /api/insumos/{id}` - Eliminar insumo
+- `GET /actuator/health` - Estado del servicio
+
 ## Flujo del Sistema
 1. **App móvil** → POST cosecha al **Microservicio Central**
 2. **Central** → Guarda en PostgreSQL y publica evento en RabbitMQ
-3. **RabbitMQ** → Enruta mensaje a cola_facturacion
+3. **RabbitMQ** → Enruta mensaje a cola_facturacion e inventario
 4. **Microservicio Facturación** → Consume mensaje, calcula monto, crea factura
-5. **Facturación** → Notifica al Central vía REST API el cambio de estado
+5. **Microservicio Inventario** → Escucha eventos de cosecha, actualiza stock de insumos
+6. **Facturación** → Notifica al Central vía REST API el cambio de estado
+7. **Inventario** → Envía notificaciones de stock bajo via RabbitMQ
 
 ## Estructura de Bases de Datos
 
@@ -97,6 +117,9 @@ El servicio estará disponible en: http://localhost:8082
 
 ### PostgreSQL Facturación (Puerto 5433)
 - **facturas**: ID, cosecha_id, monto_total, pagado, fecha_emisión
+
+### MySQL Inventario (Puerto 3306)
+- **insumos**: ID, nombre, descripción, cantidad_stock, precio_unitario, categoria
 
 ## Precios de Referencia (USD/tonelada)
 - Arroz/Arroz Oro: $120
