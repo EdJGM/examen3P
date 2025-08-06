@@ -6,6 +6,7 @@ import ec.edu.espe.ms_inventario.dto.ResponseDTO;
 import ec.edu.espe.ms_inventario.entity.Insumo;
 import ec.edu.espe.ms_inventario.service.InsumoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -45,8 +46,13 @@ public class InsumoController {
 
     @PostMapping
     public ResponseEntity<ResponseDTO> crearInsumo(@RequestBody InsumoDTO dto) {
-        Insumo insumo = insumoService.crear(dto);
-        return ResponseEntity.ok(new ResponseDTO("Insumo creado correctamente", insumo));
+        try {
+            Insumo insumo = insumoService.crear(dto);
+            return ResponseEntity.ok(new ResponseDTO("Insumo creado correctamente", insumo));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO("Error: " + e.getMessage(), null));
+        }
     }
 
     @PutMapping("/{id}")
