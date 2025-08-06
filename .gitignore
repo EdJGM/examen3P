@@ -356,7 +356,6 @@ maven-eclipse.xml
 
 # Maven
 .m2/
-repository/
 .mvn/
 maven/
 
