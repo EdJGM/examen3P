@@ -12,7 +12,7 @@
 
     <modules>
         <module>central-service</module>
-        <module>ms-inventario</module>
-        <module>facturacion</module>
+        <module>facturacion-service</module>
+<!--        <module>ms-inventario</module>-->
     </modules>
 </project>
