@@ -89,19 +89,39 @@ spec:
           env:
             - name: MYSQL_DATABASE
               value: db_inventario
-            - name: MYSQL_USER
-              value: root
             - name: MYSQL_ROOT_PASSWORD
-              value: ""
-            - name: MYSQL_ALLOW_EMPTY_PASSWORD
-              value: "yes"
+              value: rootpassword
+            - name: MYSQL_USER
+              value: inventario_user
+            - name: MYSQL_PASSWORD
+              value: inventario_pass
+          args:
+            - "--default-authentication-plugin=mysql_native_password"
+            - "--character-set-server=utf8mb4"
+            - "--collation-server=utf8mb4_unicode_ci"
           volumeMounts:
             - name: storage
               mountPath: /var/lib/mysql
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "mysqladmin ping -h localhost -u root -prootpassword"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "mysqladmin ping -h localhost -u root -prootpassword"
+            initialDelaySeconds: 60
+            periodSeconds: 30
           resources:
             requests:
-              memory: 128Mi
-              cpu: 50m
+              memory: 256Mi
+              cpu: 100m
             limits:
               memory: 512Mi
               cpu: 300m

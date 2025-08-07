@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: central-service
-          image: josue122121/central-service:v1.1
+          image: tu-usuario-docker/central-service:latest
           ports:
             - containerPort: 8080
           env:
@@ -80,7 +80,7 @@ spec:
     spec:
       containers:
         - name: ms-inventario
-          image: josue122121/ms-inventario:latest
+          image: tu-usuario-docker/ms-inventario:latest
           ports:
             - containerPort: 8081
           env:
@@ -89,11 +89,11 @@ spec:
             - name: SERVER_PORT
               value: "8081"
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql-inventario:3306/db_inventario?createDatabaseIfNotExist=true&serverTimezone=UTC
+              value: jdbc:mysql://mysql-inventario:3306/db_inventario?createDatabaseIfNotExist=true&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
             - name: SPRING_DATASOURCE_USERNAME
               value: root
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: rootpassword
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: update
             - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
@@ -144,7 +144,7 @@ spec:
     spec:
       containers:
         - name: facturacion-service
-          image: josue122121/facturacion-service:v1.1
+          image: tu-usuario-docker/facturacion-service:latest
           ports:
             - containerPort: 8082
           env:
