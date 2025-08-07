@@ -1,53 +1,103 @@
+# ========== DATABASE SERVICES ==========
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-central
+  namespace: agroflow
+spec:
+  selector:
+    app: postgres-central
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-inventario
+  namespace: agroflow
+spec:
+  selector:
+    app: mysql-inventario
+  ports:
+    - port: 3306
+      targetPort: 3306
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-facturacion
+  namespace: agroflow
+spec:
+  selector:
+    app: postgres-facturacion
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+# ========== RABBITMQ SERVICE ==========
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: agroflow
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      protocol: TCP
+      port: 5672
+      targetPort: 5672
+    - name: management
+      protocol: TCP
+      port: 15672
+      targetPort: 15672
+      nodePort: 31672
+  type: NodePort
+---
+# ========== MICROSERVICES SERVICES ==========
 apiVersion: v1
 kind: Service
 metadata:
   name: central-service
   namespace: agroflow
-  labels:
-    app: central-service
 spec:
   selector:
     app: central-service
   ports:
-  - port: 8080
-    targetPort: 8080
-    protocol: TCP
-    name: http
-  type: ClusterIP
-
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-inventario
+  namespace: agroflow
+spec:
+  selector:
+    app: ms-inventario
+  ports:
+    - port: 8081
+      targetPort: 8081
+      nodePort: 30081
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: facturacion-service
   namespace: agroflow
-  labels:
-    app: facturacion-service
 spec:
   selector:
     app: facturacion-service
   ports:
-  - port: 8082
-    targetPort: 8082
-    protocol: TCP
-    name: http
-  type: ClusterIP
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ms-inventario-service
-  namespace: agroflow
-  labels:
-    app: ms-inventario
-spec:
-  selector:
-    app: ms-inventario
-  ports:
-  - port: 8081
-    targetPort: 8081
-    protocol: TCP
-    name: http
-  type: ClusterIP
+    - port: 8082
+      targetPort: 8082
+      nodePort: 30082
+  type: NodePort

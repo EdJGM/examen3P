@@ -1,6 +1,5 @@
 package ec.edu.espe.ms_inventario.service;
 
-
 import ec.edu.espe.ms_inventario.dto.EventoCosechaDTO;
 import ec.edu.espe.ms_inventario.dto.InsumoDTO;
 import ec.edu.espe.ms_inventario.entity.Insumo;
@@ -8,10 +7,9 @@ import ec.edu.espe.ms_inventario.repository.InsumoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -22,6 +20,28 @@ public class InsumoService {
 
     @Autowired
     private NotificacionProducerService notificacionProducer;
+
+    private static final Set<UUID> cosechasProcesadas = new HashSet<>();
+
+    @PostConstruct
+    public void inicializarInsumos() {
+        if (insumoRepository.count() == 0) {
+            // Crear insumos de prueba
+            Insumo semilla = new Insumo();
+            semilla.setNombreInsumo("Semilla Arroz L-23");
+            semilla.setStock(BigDecimal.valueOf(1000));
+            semilla.setCategoria("Semillas");
+            insumoRepository.save(semilla);
+
+            Insumo fertilizante = new Insumo();
+            fertilizante.setNombreInsumo("Fertilizante N-PK");
+            fertilizante.setStock(BigDecimal.valueOf(500));
+            fertilizante.setCategoria("Fertilizantes");
+            insumoRepository.save(fertilizante);
+
+            System.out.println("✅ Insumos de prueba creados");
+        }
+    }
 
     // Fórmulas de cálculo de insumos por producto
     private static final Map<String, List<RequerimientoInsumo>> FORMULAS_PRODUCTOS = Map.of(
@@ -83,7 +103,7 @@ public class InsumoService {
         return insumoRepository.save(insumo);
     }
 
-    public Insumo actualizarStock(UUID id, Integer nuevoStock) {
+    public Insumo actualizarStock(UUID id, BigDecimal nuevoStock) {
         Insumo insumo = buscarPorId(id);
         insumo.setStock(nuevoStock);
         return insumoRepository.save(insumo);
@@ -98,6 +118,17 @@ public class InsumoService {
      * Procesa una nueva cosecha y ajusta el inventario de insumos
      */
     public void procesarCosecha(EventoCosechaDTO evento) {
+        UUID cosechaId = evento.getCosechaId();
+
+        // *** AGREGAR ESTA VALIDACIÓN AL INICIO ***
+        if (cosechasProcesadas.contains(cosechaId)) {
+            System.out.println("⚠️ Cosecha ya procesada, ignorando: " + cosechaId);
+            return;
+        }
+
+        // Marcar como procesada
+        cosechasProcesadas.add(cosechaId);
+
         try {
             String producto = evento.getProducto();
             BigDecimal toneladas = evento.getToneladas();
@@ -111,7 +142,7 @@ public class InsumoService {
 
             // Procesar cada insumo requerido
             for (RequerimientoInsumo req : requerimientos) {
-                int cantidadRequerida = (int) Math.ceil(toneladas.doubleValue() * req.getRatioPorTonelada());
+                BigDecimal cantidadRequerida = toneladas.multiply(BigDecimal.valueOf(req.getRatioPorTonelada()));
                 procesarInsumo(req.getNombreInsumo(), cantidadRequerida);
             }
 
@@ -133,7 +164,7 @@ public class InsumoService {
         }
     }
 
-    private void procesarInsumo(String nombreInsumo, int cantidadRequerida) {
+    private void procesarInsumo(String nombreInsumo, BigDecimal cantidadRequerida) {
         try {
             Insumo insumo = buscarPorNombre(nombreInsumo);
 
@@ -153,11 +184,10 @@ public class InsumoService {
             insumoRepository.save(insumo);
 
             System.out.println(String.format(
-                    "📦 Stock actualizado: %s -%d%s = %d%s restante",
+                    "📦 Stock actualizado: %s -%s%s = %s%s restante",
                     nombreInsumo, cantidadRequerida, insumo.getUnidadMedida(),
                     insumo.getStock(), insumo.getUnidadMedida()
             ));
-
         } catch (RuntimeException e) {
             throw e; // Re-throw para manejar en nivel superior
         }
@@ -168,7 +198,7 @@ public class InsumoService {
 
         for (Insumo insumo : insumosStockBajo) {
             notificacionProducer.enviarNotificacion(
-                    String.format("⚠️ Stock bajo: %s (%d%s restante, mínimo: %d)",
+                    String.format("⚠️ Stock bajo: %s (%s%s restante, mínimo: %d)",
                             insumo.getNombreInsumo(), insumo.getStock(),
                             insumo.getUnidadMedida(), insumo.getStockMinimo()),
                     "stock_bajo"
@@ -178,7 +208,7 @@ public class InsumoService {
 
     private void mapearDtoAEntidad(InsumoDTO dto, Insumo insumo) {
         insumo.setNombreInsumo(dto.getNombreInsumo());
-        insumo.setStock(dto.getStock() != null ? dto.getStock() : 0);
+        insumo.setStock(dto.getStock() != null ? BigDecimal.valueOf(dto.getStock()) : BigDecimal.ZERO);
         insumo.setUnidadMedida(dto.getUnidadMedida() != null ? dto.getUnidadMedida() : "kg");
         insumo.setCategoria(dto.getCategoria());
         insumo.setPrecioUnitario(dto.getPrecioUnitario() != null ? dto.getPrecioUnitario() : 0.0);

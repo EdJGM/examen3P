@@ -8,6 +8,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -24,12 +26,14 @@ public class CentralServiceClient {
         try {
             String url = centralServiceUrl + "/api/cosechas/" + cosechaId + "/estado";
 
-            EstadoCosechaRequest request = new EstadoCosechaRequest(estado, facturaId);
+            Map<String, Object> request = new HashMap<>();
+            request.put("estado", estado);
+            request.put("factura_id", facturaId.toString());  // Convertir a String
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<EstadoCosechaRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
                     url,

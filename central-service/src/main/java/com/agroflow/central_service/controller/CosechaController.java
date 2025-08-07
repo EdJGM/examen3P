@@ -47,8 +47,12 @@ public class CosechaController {
                                                        @RequestBody Map<String, Object> estadoRequest) {
         try {
             String estado = (String) estadoRequest.get("estado");
-            String facturaIdStr = (String) estadoRequest.get("factura_id");
-            UUID facturaId = facturaIdStr != null ? UUID.fromString(facturaIdStr) : null;
+            Object facturaIdObj = estadoRequest.get("factura_id");
+            if (facturaIdObj == null) {
+                facturaIdObj = estadoRequest.get("facturaId");
+            }
+
+            UUID facturaId = facturaIdObj != null ? UUID.fromString(facturaIdObj.toString()) : null;
 
             CosechaDTO cosechaActualizada = cosechaService.actualizarEstado(id, estado, facturaId);
             return ResponseEntity.ok(cosechaActualizada);

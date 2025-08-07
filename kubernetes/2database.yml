@@ -1,140 +1,166 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: postgres-config
-  namespace: agroflow
-data:
-  POSTGRES_DB: agroflow_central
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: Edgar123456/
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mysql-config
-  namespace: agroflow
-data:
-  MYSQL_DATABASE: db_inventario
-  MYSQL_ROOT_PASSWORD: root
-  MYSQL_USER: inventario
-  MYSQL_PASSWORD: inventario
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgres
-  namespace: agroflow
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres
-  template:
-    metadata:
-      labels:
-        app: postgres
-    spec:
-      containers:
-      - name: postgres
-        image: postgres:15
-        ports:
-        - containerPort: 5432
-        envFrom:
-        - configMapRef:
-            name: postgres-config
-        volumeMounts:
-        - name: postgres-storage
-          mountPath: /var/lib/postgresql/data
-      volumes:
-      - name: postgres-storage
-        persistentVolumeClaim:
-          claimName: postgres-pvc
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql
-  namespace: agroflow
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-      - name: mysql
-        image: mysql:8.0
-        ports:
-        - containerPort: 3306
-        envFrom:
-        - configMapRef:
-            name: mysql-config
-        volumeMounts:
-        - name: mysql-storage
-          mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-storage
-        persistentVolumeClaim:
-          claimName: mysql-pvc
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-service
-  namespace: agroflow
-spec:
-  selector:
-    app: postgres
-  ports:
-  - port: 5432
-    targetPort: 5432
-  type: ClusterIP
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-service
-  namespace: agroflow
-spec:
-  selector:
-    app: mysql
-  ports:
-  - port: 3306
-    targetPort: 3306
-  type: ClusterIP
-
----
+# ========== POSTGRES CENTRAL ==========
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: postgres-central-pvc
   namespace: agroflow
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
-
+      storage: 500Mi
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-central
+  namespace: agroflow
+spec:
+  selector:
+    matchLabels:
+      app: postgres-central
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres-central
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: agroflow_central
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: Edgar123456/
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 50m
+            limits:
+              memory: 256Mi
+              cpu: 200m
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: postgres-central-pvc
+---
+# ========== MYSQL INVENTARIO ==========
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
+  name: mysql-inventario-pvc
   namespace: agroflow
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 500Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-inventario
+  namespace: agroflow
+spec:
+  selector:
+    matchLabels:
+      app: mysql-inventario
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql-inventario
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_DATABASE
+              value: db_inventario
+            - name: MYSQL_USER
+              value: root
+            - name: MYSQL_ROOT_PASSWORD
+              value: ""
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "yes"
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/mysql
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 50m
+            limits:
+              memory: 512Mi
+              cpu: 300m
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: mysql-inventario-pvc
+---
+# ========== POSTGRES FACTURACION ==========
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-facturacion-pvc
+  namespace: agroflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-facturacion
+  namespace: agroflow
+spec:
+  selector:
+    matchLabels:
+      app: postgres-facturacion
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres-facturacion
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: agroflow_facturacion
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: Edgar123456/
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 50m
+            limits:
+              memory: 256Mi
+              cpu: 200m
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: postgres-facturacion-pvc

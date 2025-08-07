@@ -1,13 +1,14 @@
----
 apiVersion: v1
-kind: ConfigMap
+kind: PersistentVolumeClaim
 metadata:
-  name: rabbitmq-config
+  name: rabbitmq-pvc
   namespace: agroflow
-data:
-  RABBITMQ_DEFAULT_USER: admin
-  RABBITMQ_DEFAULT_PASS: admin
-
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 300Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -25,58 +26,27 @@ spec:
         app: rabbitmq
     spec:
       containers:
-      - name: rabbitmq
-        image: rabbitmq:3-management
-        ports:
-        - containerPort: 5672
-          name: amqp
-        - containerPort: 15672
-          name: management
-        envFrom:
-        - configMapRef:
-            name: rabbitmq-config
-        volumeMounts:
-        - name: rabbitmq-storage
-          mountPath: /var/lib/rabbitmq
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "200m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: "admin"
+            - name: RABBITMQ_DEFAULT_PASS
+              value: "admin"
+          volumeMounts:
+            - name: rabbitmq-storage
+              mountPath: /var/lib/rabbitmq
+          resources:
+            requests:
+              memory: 200Mi
+              cpu: 100m
+            limits:
+              memory: 400Mi
+              cpu: 300m
       volumes:
-      - name: rabbitmq-storage
-        persistentVolumeClaim:
-          claimName: rabbitmq-pvc
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rabbitmq-service
-  namespace: agroflow
-spec:
-  selector:
-    app: rabbitmq
-  ports:
-  - port: 5672
-    targetPort: 5672
-    name: amqp
-  - port: 15672
-    targetPort: 15672
-    name: management
-  type: ClusterIP
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: rabbitmq-pvc
-  namespace: agroflow
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
+        - name: rabbitmq-storage
+          persistentVolumeClaim:
+            claimName: rabbitmq-pvc

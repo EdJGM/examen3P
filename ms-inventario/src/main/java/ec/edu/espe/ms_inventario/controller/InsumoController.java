@@ -1,6 +1,7 @@
 package ec.edu.espe.ms_inventario.controller;
 
 
+import ec.edu.espe.ms_inventario.dto.EventoCosechaDTO;
 import ec.edu.espe.ms_inventario.dto.InsumoDTO;
 import ec.edu.espe.ms_inventario.dto.ResponseDTO;
 import ec.edu.espe.ms_inventario.entity.Insumo;
@@ -9,11 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/inventario/insumos")
+@RequestMapping("/api/inventario/insumos")
 @CrossOrigin(origins = "*")
 public class InsumoController {
 
@@ -64,7 +69,7 @@ public class InsumoController {
 
     @PutMapping("/{id}/stock")
     public ResponseEntity<ResponseDTO> actualizarStock(
-            @PathVariable UUID id, @RequestParam Integer nuevoStock) {
+            @PathVariable UUID id, @RequestParam BigDecimal nuevoStock) {
         Insumo insumo = insumoService.actualizarStock(id, nuevoStock);
         return ResponseEntity.ok(new ResponseDTO("Stock actualizado correctamente", insumo));
     }
@@ -73,5 +78,29 @@ public class InsumoController {
     public ResponseEntity<ResponseDTO> eliminarInsumo(@PathVariable UUID id) {
         insumoService.eliminar(id);
         return ResponseEntity.ok(new ResponseDTO("Insumo eliminado correctamente", null));
+    }
+
+    @PostMapping("/procesar-cosecha")
+    public ResponseEntity<ResponseDTO> procesarCosechaManual(@RequestBody Map<String, Object> request) {
+        try {
+            UUID cosechaId = UUID.fromString((String) request.get("cosecha_id"));
+            String producto = (String) request.get("producto");
+            BigDecimal toneladas = new BigDecimal(request.get("toneladas").toString());
+
+            // Crear evento local
+            EventoCosechaDTO evento = new EventoCosechaDTO();
+            evento.setCosechaId(cosechaId);
+            evento.setProducto(producto);
+            evento.setToneladas(toneladas);
+            evento.setEventType("nueva_cosecha");
+            evento.setTimestamp(LocalDateTime.now());
+
+            insumoService.procesarCosecha(evento);
+
+            return ResponseEntity.ok(new ResponseDTO("Cosecha procesada correctamente en inventario", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDTO("Error: " + e.getMessage(), null));
+        }
     }
 }

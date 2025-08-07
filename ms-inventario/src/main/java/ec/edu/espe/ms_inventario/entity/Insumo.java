@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,7 +26,7 @@ public class Insumo {
     private String nombreInsumo;
 
     @Column(nullable = false)
-    private Integer stock = 0;
+    private BigDecimal stock = BigDecimal.ZERO;
 
     @Column(name = "unidad_medida", length = 10)
     private String unidadMedida = "kg";
@@ -46,21 +48,20 @@ public class Insumo {
         ultimaActualizacion = LocalDateTime.now();
     }
 
-    public boolean tieneStockSuficiente(Integer cantidad) {
-        return stock >= cantidad;
+    public boolean tieneStockSuficiente(BigDecimal cantidad) {
+        return stock.compareTo(cantidad) >= 0;
     }
 
-    public void descontarStock(Integer cantidad) {
+    public void descontarStock(BigDecimal cantidad) {
         if (!tieneStockSuficiente(cantidad)) {
             throw new RuntimeException(
-                    String.format("Stock insuficiente para %s. Disponible: %d, Requerido: %d",
+                    String.format("Stock insuficiente para %s. Disponible: %s, Requerido: %s",
                             nombreInsumo, stock, cantidad)
             );
         }
-        stock -= cantidad;
+        stock = stock.subtract(cantidad);
     }
-
     public boolean estaEnStockMinimo() {
-        return stock <= stockMinimo;
+        return stock.compareTo(BigDecimal.valueOf(stockMinimo)) <= 0;
     }
 }

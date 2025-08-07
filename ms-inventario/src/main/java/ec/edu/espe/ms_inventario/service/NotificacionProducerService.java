@@ -20,7 +20,7 @@ public class NotificacionProducerService {
         try {
             NotificacionDTO dto = new NotificacionDTO(mensaje, tipo);
             String json = objectMapper.writeValueAsString(dto);
-            rabbitTemplate.convertAndSend("notificaciones_cola", json);
+            rabbitTemplate.convertAndSend("cola_notificaciones", json);
             System.out.println("📧 Notificación enviada: " + mensaje);
         } catch (Exception e) {
             System.err.println("❌ Error enviando notificación: " + e.getMessage());

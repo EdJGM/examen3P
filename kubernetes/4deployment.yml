@@ -1,11 +1,11 @@
----
+# ========== CENTRAL SERVICE ==========
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: central-service
   namespace: agroflow
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: central-service
@@ -15,113 +15,61 @@ spec:
         app: central-service
     spec:
       containers:
-      - name: central-service
-        image: central-service:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-        env:
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres-service:5432/agroflow_central"
-        - name: SPRING_DATASOURCE_USERNAME
-          value: "postgres"
-        - name: SPRING_DATASOURCE_PASSWORD
-          value: "Edgar123456/"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq-service"
-        - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: SPRING_RABBITMQ_USERNAME
-          value: "admin"
-        - name: SPRING_RABBITMQ_PASSWORD
-          value: "admin"
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-
+        - name: central-service
+          image: josue122121/central-service:v1.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "central-service"
+            - name: SERVER_PORT
+              value: "8080"
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-central:5432/agroflow_central
+            - name: SPRING_DATASOURCE_USERNAME
+              value: postgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: Edgar123456/
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: update
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: org.hibernate.dialect.PostgreSQLDialect
+            - name: SPRING_RABBITMQ_HOST
+              value: rabbitmq
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              value: admin
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: admin
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: 200m
+            limits:
+              memory: 600Mi
+              cpu: 500m
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: facturacion-service
-  namespace: agroflow
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: facturacion-service
-  template:
-    metadata:
-      labels:
-        app: facturacion-service
-    spec:
-      containers:
-      - name: facturacion-service
-        image: facturacion-service:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8082
-        env:
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres-service:5432/agroflow_facturacion"
-        - name: SPRING_DATASOURCE_USERNAME
-          value: "postgres"
-        - name: SPRING_DATASOURCE_PASSWORD
-          value: "Edgar123456/"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq-service"
-        - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: SPRING_RABBITMQ_USERNAME
-          value: "admin"
-        - name: SPRING_RABBITMQ_PASSWORD
-          value: "admin"
-        - name: CENTRAL_SERVICE_URL
-          value: "http://central-service:8080"
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8082
-          initialDelaySeconds: 60
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8082
-          initialDelaySeconds: 30
-          periodSeconds: 10
-
----
+# ========== INVENTARIO SERVICE ==========
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ms-inventario
   namespace: agroflow
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: ms-inventario
@@ -131,42 +79,115 @@ spec:
         app: ms-inventario
     spec:
       containers:
-      - name: ms-inventario
-        image: ms-inventario:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8081
-        env:
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://mysql-service:3306/db_inventario?createDatabaseIfNotExist=true&serverTimezone=UTC"
-        - name: SPRING_DATASOURCE_USERNAME
-          value: "root"
-        - name: SPRING_DATASOURCE_PASSWORD
-          value: "root"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq-service"
-        - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: SPRING_RABBITMQ_USERNAME
-          value: "admin"
-        - name: SPRING_RABBITMQ_PASSWORD
-          value: "admin"
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8081
-          initialDelaySeconds: 60
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8081
-          initialDelaySeconds: 30
-          periodSeconds: 10
+        - name: ms-inventario
+          image: josue122121/ms-inventario:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "MS-INVENTARIO-AGROFLOW"
+            - name: SERVER_PORT
+              value: "8081"
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-inventario:3306/db_inventario?createDatabaseIfNotExist=true&serverTimezone=UTC
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: ""
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: update
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: org.hibernate.dialect.MySQLDialect
+            - name: SPRING_RABBITMQ_HOST
+              value: rabbitmq
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              value: admin
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: admin
+          readinessProbe:
+            httpGet:
+              path: /api/inventario/insumos
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/inventario/insumos
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: 200m
+            limits:
+              memory: 600Mi
+              cpu: 500m
+---
+# ========== FACTURACION SERVICE ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: facturacion-service
+  namespace: agroflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: facturacion-service
+  template:
+    metadata:
+      labels:
+        app: facturacion-service
+    spec:
+      containers:
+        - name: facturacion-service
+          image: josue122121/facturacion-service:v1.1
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "facturacion-service"
+            - name: SERVER_PORT
+              value: "8082"
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-facturacion:5432/agroflow_facturacion
+            - name: SPRING_DATASOURCE_USERNAME
+              value: postgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: Edgar123456/
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: update
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: org.hibernate.dialect.PostgreSQLDialect
+            - name: SPRING_RABBITMQ_HOST
+              value: rabbitmq
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              value: admin
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: admin
+            - name: CENTRAL_SERVICE_URL
+              value: http://central-service:8080
+          readinessProbe:
+            httpGet:
+              path: /api/facturas
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/facturas
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: 200m
+            limits:
+              memory: 600Mi
+              cpu: 500m

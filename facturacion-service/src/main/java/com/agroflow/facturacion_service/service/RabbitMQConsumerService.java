@@ -2,6 +2,7 @@ package com.agroflow.facturacion_service.service;
 
 
 import com.agroflow.facturacion_service.dto.EventoCosechaDTO;
+import com.agroflow.facturacion_service.dto.FacturaDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class RabbitMQConsumerService {
                         payload.getProducto());
 
                 // Procesar la facturación
-                facturaService.procesarCosecha(
+                FacturaDTO facturaCreada = facturaService.procesarCosecha(
                         payload.getCosechaId(),
                         payload.getProducto(),
                         payload.getToneladas()

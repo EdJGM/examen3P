@@ -5,39 +5,51 @@ metadata:
   namespace: agroflow
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
 spec:
   ingressClassName: nginx
   rules:
-  - host: agroflow.local
-    http:
-      paths:
-      - path: /central(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: central-service
-            port:
-              number: 8080
-      - path: /facturacion(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: facturacion-service
-            port:
-              number: 8082
-      - path: /inventario(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: ms-inventario-service
-            port:
-              number: 8081
-      - path: /rabbitmq(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: rabbitmq-service
-            port:
-              number: 15672
+    - host: agroflow.local
+      http:
+        paths:
+          # Central Service - Agricultores y Cosechas
+          - path: /api/agricultores
+            pathType: Prefix
+            backend:
+              service:
+                name: central-service
+                port:
+                  number: 8080
+          - path: /api/cosechas
+            pathType: Prefix
+            backend:
+              service:
+                name: central-service
+                port:
+                  number: 8080
+          # Inventario Service
+          - path: /api/inventario
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-inventario
+                port:
+                  number: 8081
+          # Facturación Service
+          - path: /api/facturas
+            pathType: Prefix
+            backend:
+              service:
+                name: facturacion-service
+                port:
+                  number: 8082
+          # RabbitMQ Management (opcional)
+          - path: /rabbitmq
+            pathType: Prefix
+            backend:
+              service:
+                name: rabbitmq
+                port:
+                  number: 15672

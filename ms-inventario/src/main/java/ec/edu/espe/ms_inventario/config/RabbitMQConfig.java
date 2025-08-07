@@ -12,18 +12,32 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue inventarioQueue() {
-        return QueueBuilder.durable("cola.inventario").build();
+        return QueueBuilder.durable("cola_inventario").build();
     }
 
     @Bean
     public Queue notificacionesQueue() {
-        return QueueBuilder.durable("notificaciones_cola").build();
+        return QueueBuilder.durable("cola_notificaciones").build();
     }
 
     @Bean
     public TopicExchange cosechasExchange() {
-        return new TopicExchange("cosechas.exchange");
+        return new TopicExchange("cosechas");  // Cambiado para coincidir con los otros servicios
     }
 
-    // Configuración adicional si necesitas bindings específicos
+    @Bean
+    public Binding bindingInventario() {
+        return BindingBuilder
+                .bind(inventarioQueue())
+                .to(cosechasExchange())
+                .with("nueva");
+    }
+
+    @Bean
+    public Binding bindingNotificaciones() {
+        return BindingBuilder
+                .bind(notificacionesQueue())
+                .to(cosechasExchange())
+                .with("factura.generada");
+    }
 }
