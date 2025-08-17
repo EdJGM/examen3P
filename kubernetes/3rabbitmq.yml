@@ -1,4 +1,17 @@
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-rabbitmq
+spec:
+  capacity:
+    storage: 300Mi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  hostPath:
+    path: /mnt/data/rabbitmq
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: rabbitmq-pvc
@@ -41,12 +54,11 @@ spec:
               mountPath: /var/lib/rabbitmq
           resources:
             requests:
+              memory: 100Mi
+              cpu: 50m
+            limits:
               memory: 200Mi
               cpu: 100m
-            limits:
-              memory: 400Mi
-              cpu: 300m
       volumes:
         - name: rabbitmq-storage
-          persistentVolumeClaim:
-            claimName: rabbitmq-pvc
+          emptyDir: {}
